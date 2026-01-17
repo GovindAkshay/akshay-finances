@@ -1,5 +1,21 @@
 "use client";
 import { useState, useEffect } from 'react';
+import { initializeApp } from 'firebase/app';
+import { getFirestore, collection, addDoc, deleteDoc, doc, onSnapshot } from 'firebase/firestore';
+
+// Your Firebase config
+const firebaseConfig = {
+  apiKey: "AIzaSyBC-zG5N_stJZ6fG8EsE9sj3J-mxDfBHgY",
+  authDomain: "akshay-finances.firebaseapp.com",
+  projectId: "akshay-finances",
+  storageBucket: "akshay-finances.firebasestorage.app",
+  messagingSenderId: "794161996701",
+  appId: "1:794161996701:web:6f53c1632a3c9d9c9f4574"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
 
 export default function FinanceTracker() {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -10,19 +26,47 @@ export default function FinanceTracker() {
   const [newExpense, setNewExpense] = useState({ date: '', category: '', description: '', amount: '' });
   const [newLoan, setNewLoan] = useState({ name: '', principal: '', emi: '' });
   const [selectedMonth, setSelectedMonth] = useState(new Date().toISOString().slice(0, 7));
+  const [loading, setLoading] = useState(true);
 
+  // Real-time listeners
   useEffect(() => {
-    const savedIncome = localStorage.getItem('finance_income');
-    const savedExpenses = localStorage.getItem('finance_expenses');
-    const savedLoans = localStorage.getItem('finance_loans');
-    if (savedIncome) setIncomeEntries(JSON.parse(savedIncome));
-    if (savedExpenses) setExpenseEntries(JSON.parse(savedExpenses));
-    if (savedLoans) setLoans(JSON.parse(savedLoans));
+    const unsubIncome = onSnapshot(collection(db, 'income'), (snapshot) => {
+      setIncomeEntries(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+      setLoading(false);
+    });
+    const unsubExpenses = onSnapshot(collection(db, 'expenses'), (snapshot) => {
+      setExpenseEntries(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+    });
+    const unsubLoans = onSnapshot(collection(db, 'loans'), (snapshot) => {
+      setLoans(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+    });
+    return () => { unsubIncome(); unsubExpenses(); unsubLoans(); };
   }, []);
 
-  const saveIncome = (data: any[]) => { setIncomeEntries(data); localStorage.setItem('finance_income', JSON.stringify(data)); };
-  const saveExpenses = (data: any[]) => { setExpenseEntries(data); localStorage.setItem('finance_expenses', JSON.stringify(data)); };
-  const saveLoans = (data: any[]) => { setLoans(data); localStorage.setItem('finance_loans', JSON.stringify(data)); };
+  const addIncome = async () => {
+    if (newIncome.date && newIncome.amount) {
+      await addDoc(collection(db, 'income'), { ...newIncome, amount: parseFloat(newIncome.amount), createdAt: new Date() });
+      setNewIncome({ date: '', source: 'Elder Brother', description: '', amount: '' });
+    }
+  };
+
+  const addExpense = async () => {
+    if (newExpense.date && newExpense.amount && newExpense.category) {
+      await addDoc(collection(db, 'expenses'), { ...newExpense, amount: parseFloat(newExpense.amount), createdAt: new Date() });
+      setNewExpense({ date: '', category: '', description: '', amount: '' });
+    }
+  };
+
+  const addLoan = async () => {
+    if (newLoan.name && newLoan.emi) {
+      await addDoc(collection(db, 'loans'), { ...newLoan, principal: parseFloat(newLoan.principal || '0'), emi: parseFloat(newLoan.emi), createdAt: new Date() });
+      setNewLoan({ name: '', principal: '', emi: '' });
+    }
+  };
+
+  const deleteIncome = async (id: string) => await deleteDoc(doc(db, 'income', id));
+  const deleteExpense = async (id: string) => await deleteDoc(doc(db, 'expenses', id));
+  const deleteLoan = async (id: string) => await deleteDoc(doc(db, 'loans', id));
 
   const monthlyIncome = incomeEntries.filter(e => e.date?.startsWith(selectedMonth));
   const monthlyExpenses = expenseEntries.filter(e => e.date?.startsWith(selectedMonth));
@@ -36,36 +80,17 @@ export default function FinanceTracker() {
     return acc;
   }, {});
 
-  const addIncome = () => {
-    if (newIncome.date && newIncome.amount) {
-      saveIncome([...incomeEntries, { ...newIncome, id: Date.now(), amount: parseFloat(newIncome.amount) }]);
-      setNewIncome({ date: '', source: 'Elder Brother', description: '', amount: '' });
-    }
-  };
-
-  const addExpense = () => {
-    if (newExpense.date && newExpense.amount && newExpense.category) {
-      saveExpenses([...expenseEntries, { ...newExpense, id: Date.now(), amount: parseFloat(newExpense.amount) }]);
-      setNewExpense({ date: '', category: '', description: '', amount: '' });
-    }
-  };
-
-  const addLoan = () => {
-    if (newLoan.name && newLoan.emi) {
-      saveLoans([...loans, { ...newLoan, id: Date.now(), principal: parseFloat(newLoan.principal || '0'), emi: parseFloat(newLoan.emi) }]);
-      setNewLoan({ name: '', principal: '', emi: '' });
-    }
-  };
-
   const categories = ['Rent', 'Groceries', 'Utilities', 'Transport', 'Food', 'Healthcare', 'Tuition', 'Books', 'Entertainment', 'Other'];
   const formatUSD = (amt: number) => '$' + amt.toLocaleString();
   const formatINR = (amt: number) => '₹' + Math.round(amt * 83).toLocaleString();
+
+  if (loading) return <div className="min-h-screen bg-slate-900 text-white flex items-center justify-center"><p className="text-xl">Loading...</p></div>;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white p-4 md:p-8">
       <div className="max-w-4xl mx-auto">
         <h1 className="text-3xl font-bold mb-1">💰 Akshay&apos;s Finance Tracker</h1>
-        <p className="text-slate-400 mb-6">Track income from brother, expenses &amp; dad&apos;s EMI</p>
+        <p className="text-slate-400 mb-6">Track income from brother, expenses &amp; dad&apos;s EMI • <span className="text-green-400">🔄 Synced in real-time</span></p>
 
         <select value={selectedMonth} onChange={e => setSelectedMonth(e.target.value)} className="bg-slate-700 border border-slate-600 rounded-lg px-4 py-2 mb-6">
           {Array.from({length: 12}, (_, i) => {
@@ -130,12 +155,12 @@ export default function FinanceTracker() {
             </div>
             <div className="space-y-2 max-h-80 overflow-y-auto">
               {incomeEntries.length === 0 ? <p className="text-slate-500 text-center py-8">No income recorded yet</p> :
-                incomeEntries.sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime()).map(e => (
+                incomeEntries.sort((a,b) => b.date?.localeCompare(a.date)).map(e => (
                 <div key={e.id} className="flex justify-between items-center bg-slate-700/50 p-3 rounded-lg">
                   <div><p className="font-medium">{e.description || 'Living Expenses'}</p><p className="text-xs text-slate-400">{e.date}</p></div>
                   <div className="flex items-center gap-3">
                     <span className="font-bold text-green-400">{formatUSD(e.amount)}</span>
-                    <button onClick={() => saveIncome(incomeEntries.filter(x => x.id !== e.id))} className="text-red-400 hover:text-red-300">✕</button>
+                    <button onClick={() => deleteIncome(e.id)} className="text-red-400 hover:text-red-300">✕</button>
                   </div>
                 </div>
               ))}
@@ -158,12 +183,12 @@ export default function FinanceTracker() {
             </div>
             <div className="space-y-2 max-h-80 overflow-y-auto">
               {expenseEntries.length === 0 ? <p className="text-slate-500 text-center py-8">No expenses recorded yet</p> :
-                expenseEntries.sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime()).map(e => (
+                expenseEntries.sort((a,b) => b.date?.localeCompare(a.date)).map(e => (
                 <div key={e.id} className="flex justify-between items-center bg-slate-700/50 p-3 rounded-lg">
                   <div><p className="font-medium">{e.description}</p><p className="text-xs text-slate-400">{e.date} • {e.category}</p></div>
                   <div className="flex items-center gap-3">
                     <span className="font-bold text-red-400">{formatUSD(e.amount)}</span>
-                    <button onClick={() => saveExpenses(expenseEntries.filter(x => x.id !== e.id))} className="text-red-400 hover:text-red-300">✕</button>
+                    <button onClick={() => deleteExpense(e.id)} className="text-red-400 hover:text-red-300">✕</button>
                   </div>
                 </div>
               ))}
@@ -186,7 +211,7 @@ export default function FinanceTracker() {
                 <div key={l.id} className="bg-slate-700/50 p-4 rounded-lg">
                   <div className="flex justify-between mb-2">
                     <p className="font-semibold">{l.name}</p>
-                    <button onClick={() => saveLoans(loans.filter(x => x.id !== l.id))} className="text-red-400 hover:text-red-300">✕</button>
+                    <button onClick={() => deleteLoan(l.id)} className="text-red-400 hover:text-red-300">✕</button>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-slate-400">Principal: {formatINR(l.principal)}</span>
@@ -203,7 +228,7 @@ export default function FinanceTracker() {
           </div>
         )}
 
-        <p className="text-center text-slate-600 text-xs mt-8">Data saves in your browser ✓</p>
+        <p className="text-center text-slate-600 text-xs mt-8">🔄 Data syncs automatically with Firebase</p>
       </div>
     </div>
   );
