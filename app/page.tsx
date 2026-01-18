@@ -430,7 +430,6 @@ export default function FinanceTracker() {
     );
   };
 
-  // Loading state
   if (authChecking) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
@@ -439,7 +438,6 @@ export default function FinanceTracker() {
     );
   }
 
-  // Login screen
   if (!user || !isAuthorized) {
     return (
       <div className="min-h-screen bg-black relative overflow-hidden flex items-center justify-center">
@@ -502,7 +500,6 @@ export default function FinanceTracker() {
     );
   }
 
-  // Loading data
   if (loading) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
@@ -514,11 +511,10 @@ export default function FinanceTracker() {
     );
   }
 
-  // Main app
   return (
     <div className={`min-h-screen ${theme.text} relative overflow-hidden`} style={{ background: theme.bg }}>
       <audio ref={audioRef} loop>
-        <source src="/batman-theme.mp3" type="audio/mpeg" />
+        <source src="/YTDown.com_YouTube_The-Batman-Official-Soundtrack-It-s-Rain_Media_IhHvaR1hFYs_001_1080p.mp3" type="audio/mpeg" />
       </audio>
 
       {showMusicPrompt && (
@@ -574,7 +570,6 @@ export default function FinanceTracker() {
       )}
 
       <div className="max-w-6xl mx-auto relative z-10 p-4 md:p-6">
-        {/* Header */}
         <div className="flex flex-wrap justify-between items-center mb-6 gap-3">
           <div className="flex items-center gap-3">
             <span className={`${darkMode ? 'bg-red-900/60 text-red-300 border border-red-800/50' : 'bg-red-100 text-red-700 border border-red-200'} px-4 py-2 rounded-full font-medium text-sm`}>
@@ -595,7 +590,6 @@ export default function FinanceTracker() {
           </div>
         </div>
 
-        {/* Logo & Title */}
         <div className="text-center mb-8">
           <img 
             src="/batman_logo-removebg-preview-Photoroom.png" 
@@ -609,7 +603,6 @@ export default function FinanceTracker() {
           <p className={`${theme.textMuted} tracking-[0.3em] text-sm font-medium`}>VENGEANCE • SHADOWS • SAVINGS</p>
         </div>
 
-        {/* Filters & Actions */}
         <div className="flex flex-wrap justify-center gap-3 mb-6">
           <select value={selectedMonth} onChange={e => setSelectedMonth(e.target.value)} className={`${theme.input} border rounded-xl px-5 py-3 font-medium text-sm min-w-[180px]`}>
             <option value="all">🦇 ALL TIME</option>
@@ -626,7 +619,6 @@ export default function FinanceTracker() {
           </button>
         </div>
 
-        {/* Tab Navigation */}
         <div className="flex flex-wrap justify-center gap-2 mb-6">
           {[
             { id: 'batcave', icon: '🦇', name: 'BATCAVE' },
@@ -645,7 +637,6 @@ export default function FinanceTracker() {
           ))}
         </div>
 
-        {/* Alfred Advice */}
         {activeTab === 'batcave' && alfredAdvice && (
           <div className={`${theme.card} border rounded-2xl p-4 mb-6 flex items-start gap-4`}>
             <div className="text-4xl">🎩</div>
@@ -656,7 +647,6 @@ export default function FinanceTracker() {
           </div>
         )}
 
-        {/* BATCAVE TAB */}
         {activeTab === 'batcave' && (
           <div className="space-y-6">
             <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
@@ -681,7 +671,6 @@ export default function FinanceTracker() {
           </div>
         )}
 
-        {/* INTEL TAB */}
         {activeTab === 'intel' && (
           <div className={`${theme.card} border rounded-2xl p-6`}>
             <p className="text-red-500 font-bold text-xl mb-6">📊 EXPENSE BREAKDOWN</p>
@@ -689,7 +678,6 @@ export default function FinanceTracker() {
           </div>
         )}
 
-        {/* INCOME TAB */}
         {activeTab === 'income' && (
           <div className={`${theme.card} border rounded-2xl p-6`}>
             <p className="text-green-500 font-bold text-xl mb-4">💰 CASH IN</p>
@@ -740,7 +728,6 @@ export default function FinanceTracker() {
           </div>
         )}
 
-        {/* EXPENSES TAB */}
         {activeTab === 'expenses' && (
           <div className={`${theme.card} border rounded-2xl p-6`}>
             <p className="text-red-500 font-bold text-xl mb-4">💸 CASH OUT</p>
@@ -795,7 +782,6 @@ export default function FinanceTracker() {
           </div>
         )}
 
-        {/* EMI TAB */}
         {activeTab === 'emi' && (
           <div className={`${theme.card} border rounded-2xl p-6`}>
             <p className="text-purple-500 font-bold text-xl mb-4">🏦 EMI PAYMENTS</p>
@@ -829,7 +815,6 @@ export default function FinanceTracker() {
           </div>
         )}
 
-        {/* SIP TAB */}
         {activeTab === 'sip' && (
           <div className={`${theme.card} border rounded-2xl p-6`}>
             <p className="text-blue-500 font-bold text-xl mb-4">📈 SIP INVESTMENTS</p>
@@ -863,7 +848,6 @@ export default function FinanceTracker() {
           </div>
         )}
 
-        {/* Footer */}
         <p className={`text-center ${theme.textMuted2} text-xs mt-10 tracking-[0.2em]`}>
           I AM VENGEANCE • I AM THE NIGHT • I AM FINANCIALLY RESPONSIBLE
         </p>
