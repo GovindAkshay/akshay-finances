@@ -38,12 +38,9 @@ export default function FinanceTracker() {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [incomeEntries, setIncomeEntries] = useState<any[]>([]);
   const [expenseEntries, setExpenseEntries] = useState<any[]>([]);
-  const [emiPayments, setEmiPayments] = useState<any[]>([]);
   const [sips, setSips] = useState<any[]>([]);
   const [newIncome, setNewIncome] = useState({ date: '', description: '', amount: '' });
   const [newExpense, setNewExpense] = useState({ date: '', category: '', description: '', amount: '' });
-  const [newLoan, setNewLoan] = useState({ name: '', totalAmount: '', disbursedAmount: '', usedAmount: '' });
-  const [newEmi, setNewEmi] = useState({ date: '', loanName: '', amount: '' });
   const [newSip, setNewSip] = useState({ date: '', name: '', amount: '' });
   const [selectedMonth, setSelectedMonth] = useState('all');
   const [loading, setLoading] = useState(true);
@@ -87,8 +84,6 @@ export default function FinanceTracker() {
     const unsubs = [
       onSnapshot(collection(db, 'income'), (s) => { setIncomeEntries(s.docs.map(d => ({ id: d.id, ...d.data() }))); setLoading(false); }),
       onSnapshot(collection(db, 'expenses'), (s) => setExpenseEntries(s.docs.map(d => ({ id: d.id, ...d.data() })))),
-      onSnapshot(collection(db, 'loans'), (s) => setLoans(s.docs.map(d => ({ id: d.id, ...d.data() })))),
-      onSnapshot(collection(db, 'emiPayments'), (s) => setEmiPayments(s.docs.map(d => ({ id: d.id, ...d.data() })))),
       onSnapshot(collection(db, 'sips'), (s) => setSips(s.docs.map(d => ({ id: d.id, ...d.data() }))))
     ];
     return () => unsubs.forEach(u => u());
@@ -101,22 +96,17 @@ export default function FinanceTracker() {
 
   const addIncome = async () => { if (canEdit && newIncome.date && newIncome.amount) { await addDoc(collection(db, 'income'), { ...newIncome, amount: parseFloat(newIncome.amount) }); setNewIncome({ date: '', description: '', amount: '' }); triggerBats(); }};
   const addExpense = async () => { if (canEdit && newExpense.date && newExpense.amount && newExpense.category) { await addDoc(collection(db, 'expenses'), { ...newExpense, amount: parseFloat(newExpense.amount) }); setNewExpense({ date: '', category: '', description: '', amount: '' }); }};
-  const addLoan = async () => { if (canEdit && newLoan.name && newLoan.totalAmount) { await addDoc(collection(db, 'loans'), { ...newLoan, totalAmount: parseFloat(newLoan.totalAmount), disbursedAmount: parseFloat(newLoan.disbursedAmount || '0'), usedAmount: parseFloat(newLoan.usedAmount || '0') }); setNewLoan({ name: '', totalAmount: '', disbursedAmount: '', usedAmount: '' }); }};
-  const addEmi = async () => { if (canEdit && newEmi.date && newEmi.amount) { await addDoc(collection(db, 'emiPayments'), { ...newEmi, amount: parseFloat(newEmi.amount) }); setNewEmi({ date: '', loanName: '', amount: '' }); }};
   const addSip = async () => { if (canEdit && newSip.date && newSip.amount) { await addDoc(collection(db, 'sips'), { ...newSip, amount: parseFloat(newSip.amount) }); setNewSip({ date: '', name: '', amount: '' }); }};
   const deleteItem = async (col: string, id: string) => { if (canEdit) await deleteDoc(doc(db, col, id)); };
 
   const filterByMonth = (entries: any[], month: string) => month === 'all' ? entries : entries.filter(e => e.date?.startsWith(month));
   const filteredIncome = filterByMonth(incomeEntries, selectedMonth);
   const filteredExpenses = filterByMonth(expenseEntries, selectedMonth);
-  const filteredEmi = filterByMonth(emiPayments, selectedMonth);
   const filteredSips = filterByMonth(sips, selectedMonth);
 
   const totalIncome = filteredIncome.reduce((s, e) => s + e.amount, 0);
   const totalExpenses = filteredExpenses.reduce((s, e) => s + e.amount, 0);
-  const totalEMI = filteredEmi.reduce((s, e) => s + e.amount, 0);
   const totalSIP = filteredSips.reduce((s, e) => s + e.amount, 0);
-  const totalLoanBalance = loans.reduce((s, l) => s + (l.disbursedAmount - l.usedAmount), 0);
   const balance = totalIncome - totalExpenses;
 
   const categoryTotals = filteredExpenses.reduce((acc: any, e) => { acc[e.category] = (acc[e.category] || 0) + e.amount; return acc; }, {});
@@ -138,7 +128,7 @@ export default function FinanceTracker() {
   const getMonthData = (month: string) => {
     const inc = filterByMonth(incomeEntries, month);
     const exp = filterByMonth(expenseEntries, month);
-    return { income: inc.reduce((s, e) => s + e.amount, 0), expenses: exp.reduce((s, e) => s + e.amount, 0), emi: filterByMonth(emiPayments, month).reduce((s, e) => s + e.amount, 0), sip: filterByMonth(sips, month).reduce((s, e) => s + e.amount, 0) };
+    return { income: inc.reduce((s, e) => s + e.amount, 0), expenses: exp.reduce((s, e) => s + e.amount, 0), sip: filterByMonth(sips, month).reduce((s, e) => s + e.amount, 0) };
   };
 
   const categories = ['Rent', 'Groceries', 'Utilities', 'Transport', 'Food', 'Healthcare', 'Tuition', 'Books', 'Entertainment', 'Splitwise', 'Shopping', 'Other'];
@@ -149,7 +139,7 @@ export default function FinanceTracker() {
   const getMonthName = (m: string) => { try { return new Date(m + '-01').toLocaleString('default', { month: 'long', year: 'numeric' }); } catch { return m; }};
 
   const shareWhatsApp = () => {
-    const msg = `🦇 *THE DARK WALLET* - ${selectedMonth === 'all' ? 'All Time' : getMonthName(selectedMonth)}\n\n💰 Income: ${formatUSD(totalIncome)}\n💸 Expenses: ${formatUSD(totalExpenses)}\n📊 Balance: ${formatUSD(balance)}\n🏦 EMI: ${formatINR(totalEMI)}\n📈 SIP: ${formatINR(totalSIP)}\n\n💱 1 USD = ₹${exchangeRate.toFixed(2)}`;
+    const msg = `🦇 *THE DARK WALLET* - ${selectedMonth === 'all' ? 'All Time' : getMonthName(selectedMonth)}\n\n💰 Income: ${formatUSD(totalIncome)}\n💸 Expenses: ${formatUSD(totalExpenses)}\n📊 Balance: ${formatUSD(balance)}\n📈 SIP: ${formatINR(totalSIP)}\n\n💱 1 USD = ₹${exchangeRate.toFixed(2)}`;
     window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
   };
 
@@ -162,7 +152,7 @@ export default function FinanceTracker() {
         income: formatUSD(totalIncome) + ' (' + formatINR(totalIncome) + ')',
         expenses: formatUSD(totalExpenses) + ' (' + formatINR(totalExpenses) + ')',
         balance: formatUSD(balance) + ' (' + formatINR(balance) + ')',
-        emi: formatINR(totalEMI), sip: formatINR(totalSIP),
+        sip: formatINR(totalSIP),
         rate: '1 USD = ₹' + exchangeRate.toFixed(2)
       }, EMAILJS_KEY);
       alert('📧 Email sent!');
@@ -180,14 +170,13 @@ export default function FinanceTracker() {
     pdf.text('THE DARK WALLET', pw / 2, 18, { align: 'center' });
     pdf.setFontSize(10); pdf.setTextColor(150);
     pdf.text((selectedMonth === 'all' ? 'All Time' : getMonthName(selectedMonth)) + ' | 1 USD = ₹' + exchangeRate.toFixed(2), pw / 2, 28, { align: 'center' });
-    const summaryData = [['Income', formatUSD(totalIncome), formatINR(totalIncome)], ['Expenses', formatUSD(totalExpenses), formatINR(totalExpenses)], ['Balance', formatUSD(balance), formatINR(balance)], ['EMI', '-', formatINR(totalEMI)], ['SIP', '-', formatINR(totalSIP)]];
+    const summaryData = [['Income', formatUSD(totalIncome), formatINR(totalIncome)], ['Expenses', formatUSD(totalExpenses), formatINR(totalExpenses)], ['Balance', formatUSD(balance), formatINR(balance)], ['SIP', '-', formatINR(totalSIP)]];
     (pdf as any).autoTable({ startY: 45, head: [['', 'USD', 'INR']], body: summaryData, theme: 'grid', headStyles: { fillColor: [220, 38, 38] } });
     if (filteredIncome.length) { (pdf as any).autoTable({ startY: (pdf as any).lastAutoTable.finalY + 10, head: [['Date', 'Description', 'Amount']], body: filteredIncome.map(e => [e.date, e.description || '-', formatUSD(e.amount)]), theme: 'grid', headStyles: { fillColor: [34, 197, 94] } }); }
     if (filteredExpenses.length) { (pdf as any).autoTable({ startY: (pdf as any).lastAutoTable.finalY + 10, head: [['Date', 'Category', 'Amount']], body: filteredExpenses.map(e => [e.date, e.category, formatUSD(e.amount)]), theme: 'grid', headStyles: { fillColor: [220, 38, 38] } }); }
     pdf.save(`dark-wallet-${selectedMonth || 'all'}.pdf`);
   };
 
-  // Theme colors
   const theme = {
     bg: darkMode ? 'linear-gradient(180deg, #0a0000 0%, #1a0505 50%, #000 100%)' : 'linear-gradient(180deg, #f5f5f5 0%, #e5e5e5 50%, #d5d5d5 100%)',
     text: darkMode ? 'text-gray-100' : 'text-gray-800',
@@ -264,27 +253,6 @@ export default function FinanceTracker() {
       )}
       <style>{`@keyframes rain{0%{transform:translateY(-100vh)}100%{transform:translateY(100vh)}}@keyframes flyBat{0%{transform:translateX(-50px) translateY(0);opacity:1}100%{transform:translateX(100vw) translateY(-50px);opacity:0}}`}</style>
 
-      {/* Gotham Skyline - Fixed & Bigger */}
-      {darkMode && (
-        <div className="fixed bottom-0 left-0 right-0 h-48 pointer-events-none z-0">
-          <svg viewBox="0 0 1400 200" className="w-full h-full" preserveAspectRatio="xMidYMax slice">
-            <defs>
-              <linearGradient id="skyGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-                <stop offset="0%" stopColor="#1a1a1a" />
-                <stop offset="100%" stopColor="#0a0a0a" />
-              </linearGradient>
-            </defs>
-            <path fill="url(#skyGrad)" d="M0,200 L0,140 L50,140 L50,100 L70,100 L70,70 L90,70 L90,100 L130,100 L130,60 L150,60 L150,40 L180,40 L180,80 L220,80 L220,50 L250,50 L250,30 L280,30 L280,60 L320,60 L320,90 L370,90 L370,50 L400,50 L400,25 L430,25 L430,60 L480,60 L480,100 L530,100 L530,70 L560,70 L560,45 L590,45 L590,75 L640,75 L640,110 L700,110 L700,60 L740,60 L740,35 L770,35 L770,20 L800,20 L800,50 L850,50 L850,85 L900,85 L900,55 L940,55 L940,30 L970,30 L970,65 L1020,65 L1020,95 L1080,95 L1080,60 L1120,60 L1120,40 L1150,40 L1150,70 L1200,70 L1200,100 L1260,100 L1260,130 L1320,130 L1320,150 L1400,150 L1400,200 Z" />
-            {/* Glowing windows */}
-            {[...Array(60)].map((_, i) => (
-              <rect key={i} x={30 + (i % 25) * 55 + Math.random() * 15} y={50 + Math.floor(i / 25) * 50 + Math.random() * 30} width="6" height="10" fill={Math.random() > 0.4 ? '#fbbf24' : '#78350f'} opacity={0.3 + Math.random() * 0.5}>
-                <animate attributeName="opacity" values={`${0.3 + Math.random() * 0.4};${0.6 + Math.random() * 0.4};${0.3 + Math.random() * 0.4}`} dur={`${2 + Math.random() * 3}s`} repeatCount="indefinite" />
-              </rect>
-            ))}
-          </svg>
-        </div>
-      )}
-
       {/* Flying Bats */}
       {showBats && (
         <div className="fixed inset-0 pointer-events-none z-50">
@@ -344,14 +312,13 @@ export default function FinanceTracker() {
           <button onClick={() => setCompareMode(!compareMode)} className={`px-4 py-2 rounded-lg font-bold ${compareMode ? 'bg-yellow-500 text-black' : 'bg-gray-700 text-yellow-400'}`}>📊 Compare</button>
         </div>
 
-        {/* BIGGER Navigation Buttons with Names */}
+        {/* Navigation Buttons */}
         <div className="flex flex-wrap justify-center gap-3 mb-6">
           {[
             { id: 'dashboard', icon: '🦇', name: 'Dashboard' },
             { id: 'analytics', icon: '📊', name: 'Analytics' },
             { id: 'income', icon: '💰', name: 'Income' },
             { id: 'expenses', icon: '💸', name: 'Expenses' },
-
             { id: 'sip', icon: '📈', name: 'SIP' }
           ].map(tab => (
             <button 
@@ -399,12 +366,11 @@ export default function FinanceTracker() {
         {/* Dashboard */}
         {activeTab === 'dashboard' && !compareMode && (
           <div className="space-y-4">
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               {[
                 { l: 'INCOME', v: formatUSD(totalIncome), s: formatINR(totalIncome), c: 'green' },
                 { l: 'EXPENSES', v: formatUSD(totalExpenses), s: formatINR(totalExpenses), c: 'red' },
                 { l: 'BALANCE', v: formatUSD(balance), s: formatINR(balance), c: balance >= 0 ? 'green' : 'red' },
-                { l: 'EMI', v: formatINR(totalEMI), s: '', c: 'purple' },
                 { l: 'SIP', v: formatINR(totalSIP), s: '', c: 'blue' }
               ].map((c, i) => (
                 <div key={i} className={`${theme.card} border p-4 rounded-xl`}>
@@ -414,7 +380,6 @@ export default function FinanceTracker() {
                 </div>
               ))}
             </div>
-
           </div>
         )}
 
@@ -513,8 +478,6 @@ export default function FinanceTracker() {
             </div>
           </div>
         )}
-
-
 
         {/* SIP */}
         {activeTab === 'sip' && !compareMode && (
