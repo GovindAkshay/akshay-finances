@@ -95,7 +95,22 @@ export default function FinanceTracker() {
     return () => unsubs.forEach(u => u());
   }, []);
 
-  const login = () => signInWithPopup(auth, provider);
+  const login = async () => {
+    try {
+      await signInWithPopup(auth, provider);
+    } catch (error: any) {
+      console.error("Login error:", error);
+      if (error.code === 'auth/unauthorized-domain') {
+        alert('❌ Domain not authorized!\n\nAdd "akshay-finances.vercel.app" to Firebase Console → Authentication → Settings → Authorized domains');
+      } else if (error.code === 'auth/popup-closed-by-user') {
+        alert('Login popup was closed. Please try again.');
+      } else if (error.code === 'auth/popup-blocked') {
+        alert('Popup was blocked by browser. Please allow popups for this site.');
+      } else {
+        alert(`Login failed: ${error.message}`);
+      }
+    }
+  };
   const logout = () => signOut(auth);
   const installPWA = async () => { if (deferredPrompt) { deferredPrompt.prompt(); setDeferredPrompt(null); }};
   const triggerBats = useCallback(() => { setShowBats(true); setTimeout(() => setShowBats(false), 3000); }, []);
@@ -173,8 +188,21 @@ export default function FinanceTracker() {
   const formatUSD = (amt: number) => '$' + (amt || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   const formatINR = (amt: number) => '₹' + Math.round((amt || 0) * exchangeRate).toLocaleString();
   const getMonthName = (m: string) => {
-    try { return new Date(m + '-01').toLocaleString('default', { month: 'long', year: 'numeric' }); }
-    catch { return m; }
+    try {
+      const [year, month] = m.split('-');
+      const date = new Date(parseInt(year), parseInt(month) - 1, 1);
+      return date.toLocaleString('default', { month: 'long', year: 'numeric' });
+    } catch { return m; }
+  };
+
+  // Get monthly totals for summary table
+  const getMonthlyTotals = (entries: any[]) => {
+    const totals: Record<string, number> = {};
+    entries.forEach(e => {
+      const m = e.date?.slice(0, 7);
+      if (m) totals[m] = (totals[m] || 0) + e.amount;
+    });
+    return Object.entries(totals).sort((a, b) => b[0].localeCompare(a[0]));
   };
 
   const sendEmail = async () => {
@@ -534,6 +562,41 @@ export default function FinanceTracker() {
                 <button onClick={addIncome} className="bg-green-600 hover:bg-green-500 text-white px-6 py-2.5 rounded-lg font-bold transition-colors">+ Add</button>
               </div>
             )}
+            
+            {/* Monthly Summary Table */}
+            <div className={`${theme.cardInner} rounded-xl p-4 mb-6`}>
+              <p className={`${theme.text} font-bold mb-3`}>📊 Monthly Summary</p>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className={`${theme.textMuted} border-b ${darkMode ? 'border-gray-700' : 'border-gray-300'}`}>
+                      <th className="text-left py-2 px-3">Month</th>
+                      <th className="text-right py-2 px-3">Total (USD)</th>
+                      <th className="text-right py-2 px-3">Total (INR)</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {getMonthlyTotals(filteredIncome).map(([month, total]) => (
+                      <tr key={month} className={`border-b ${darkMode ? 'border-gray-800' : 'border-gray-200'}`}>
+                        <td className={`${theme.text} py-2 px-3 font-medium`}>{getMonthName(month)}</td>
+                        <td className="text-green-500 py-2 px-3 text-right font-bold">{formatUSD(total)}</td>
+                        <td className={`${theme.textMuted} py-2 px-3 text-right`}>{formatINR(total)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                  <tfoot>
+                    <tr className={`${darkMode ? 'bg-green-900/20' : 'bg-green-100'}`}>
+                      <td className="text-green-500 py-3 px-3 font-bold">GRAND TOTAL</td>
+                      <td className="text-green-500 py-3 px-3 text-right font-black text-lg">{formatUSD(totalIncome)}</td>
+                      <td className={`${theme.textMuted} py-3 px-3 text-right font-bold`}>{formatINR(totalIncome)}</td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+            </div>
+
+            {/* Detailed Entries */}
+            <p className={`${theme.text} font-bold mb-3`}>📝 All Entries</p>
             <div className="space-y-4 max-h-96 overflow-y-auto">
               {Object.entries(groupByMonth(filteredIncome)).map(([m, entries]: any) => (
                 <div key={m}>
@@ -575,6 +638,41 @@ export default function FinanceTracker() {
                 <button onClick={addExpense} className="bg-red-600 hover:bg-red-500 text-white px-6 py-2.5 rounded-lg font-bold transition-colors">+ Add</button>
               </div>
             )}
+
+            {/* Monthly Summary Table */}
+            <div className={`${theme.cardInner} rounded-xl p-4 mb-6`}>
+              <p className={`${theme.text} font-bold mb-3`}>📊 Monthly Summary</p>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className={`${theme.textMuted} border-b ${darkMode ? 'border-gray-700' : 'border-gray-300'}`}>
+                      <th className="text-left py-2 px-3">Month</th>
+                      <th className="text-right py-2 px-3">Total (USD)</th>
+                      <th className="text-right py-2 px-3">Total (INR)</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {getMonthlyTotals(filteredExpenses).map(([month, total]) => (
+                      <tr key={month} className={`border-b ${darkMode ? 'border-gray-800' : 'border-gray-200'}`}>
+                        <td className={`${theme.text} py-2 px-3 font-medium`}>{getMonthName(month)}</td>
+                        <td className="text-red-500 py-2 px-3 text-right font-bold">{formatUSD(total)}</td>
+                        <td className={`${theme.textMuted} py-2 px-3 text-right`}>{formatINR(total)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                  <tfoot>
+                    <tr className={`${darkMode ? 'bg-red-900/20' : 'bg-red-100'}`}>
+                      <td className="text-red-500 py-3 px-3 font-bold">GRAND TOTAL</td>
+                      <td className="text-red-500 py-3 px-3 text-right font-black text-lg">{formatUSD(totalExpenses)}</td>
+                      <td className={`${theme.textMuted} py-3 px-3 text-right font-bold`}>{formatINR(totalExpenses)}</td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+            </div>
+
+            {/* Detailed Entries */}
+            <p className={`${theme.text} font-bold mb-3`}>📝 All Entries</p>
             <div className="space-y-4 max-h-96 overflow-y-auto">
               {Object.entries(groupByMonth(filteredExpenses)).map(([m, entries]: any) => (
                 <div key={m}>
