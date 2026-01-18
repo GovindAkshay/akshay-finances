@@ -38,7 +38,6 @@ export default function FinanceTracker() {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [incomeEntries, setIncomeEntries] = useState<any[]>([]);
   const [expenseEntries, setExpenseEntries] = useState<any[]>([]);
-  const [loans, setLoans] = useState<any[]>([]);
   const [emiPayments, setEmiPayments] = useState<any[]>([]);
   const [sips, setSips] = useState<any[]>([]);
   const [newIncome, setNewIncome] = useState({ date: '', description: '', amount: '' });
@@ -352,7 +351,7 @@ export default function FinanceTracker() {
             { id: 'analytics', icon: '📊', name: 'Analytics' },
             { id: 'income', icon: '💰', name: 'Income' },
             { id: 'expenses', icon: '💸', name: 'Expenses' },
-            { id: 'loans', icon: '🏦', name: 'Loans' },
+
             { id: 'sip', icon: '📈', name: 'SIP' }
           ].map(tab => (
             <button 
@@ -415,14 +414,7 @@ export default function FinanceTracker() {
                 </div>
               ))}
             </div>
-            <div className={`${theme.card} border p-4 rounded-xl`}>
-              <p className={`${theme.red} font-bold text-sm mb-3`}>🏦 LOAN STATUS</p>
-              <div className="grid grid-cols-3 gap-3 text-center">
-                <div className={`${theme.cardInner} p-3 rounded-lg`}><p className={`${theme.textMuted2} text-xs`}>Sanctioned</p><p className={`${theme.text} text-lg font-bold`}>{formatINR(loans.reduce((s, l) => s + l.totalAmount, 0))}</p></div>
-                <div className={`${theme.cardInner} p-3 rounded-lg`}><p className={`${theme.textMuted2} text-xs`}>Disbursed</p><p className="text-lg font-bold text-green-500">{formatINR(loans.reduce((s, l) => s + l.disbursedAmount, 0))}</p></div>
-                <div className={`${theme.cardInner} p-3 rounded-lg`}><p className={`${theme.textMuted2} text-xs`}>Available</p><p className="text-lg font-bold text-red-500">{formatINR(totalLoanBalance)}</p></div>
-              </div>
-            </div>
+
           </div>
         )}
 
@@ -522,55 +514,7 @@ export default function FinanceTracker() {
           </div>
         )}
 
-        {/* Loans */}
-        {activeTab === 'loans' && !compareMode && (
-          <div className="space-y-4">
-            <div className={`${theme.card} border p-4 rounded-xl`}>
-              <p className="text-red-500 font-bold text-lg mb-3">🏦 LOAN DISBURSEMENT</p>
-              {canEdit && (
-                <div className="flex flex-wrap gap-2 mb-4">
-                  <input value={newLoan.name} onChange={e => setNewLoan({ ...newLoan, name: e.target.value })} placeholder="Loan Name" className={`${theme.input} border rounded-lg px-3 py-2 w-32`} />
-                  <input type="number" value={newLoan.totalAmount} onChange={e => setNewLoan({ ...newLoan, totalAmount: e.target.value })} placeholder="Total ₹" className={`${theme.input} border rounded-lg px-3 py-2 w-28`} />
-                  <input type="number" value={newLoan.disbursedAmount} onChange={e => setNewLoan({ ...newLoan, disbursedAmount: e.target.value })} placeholder="Disbursed ₹" className={`${theme.input} border rounded-lg px-3 py-2 w-28`} />
-                  <input type="number" value={newLoan.usedAmount} onChange={e => setNewLoan({ ...newLoan, usedAmount: e.target.value })} placeholder="Used ₹" className={`${theme.input} border rounded-lg px-3 py-2 w-24`} />
-                  <button onClick={addLoan} className="bg-red-600 hover:bg-red-500 text-white px-4 py-2 rounded-lg font-bold">+ Add</button>
-                </div>
-              )}
-              {loans.map(l => (
-                <div key={l.id} className={`${theme.cardInner} p-4 rounded-lg mb-3`}>
-                  <div className="flex justify-between mb-2"><span className="text-red-500 font-bold text-lg">{l.name}</span>{canEdit && <button onClick={() => deleteItem('loans', l.id)} className="text-red-500 text-lg">✕</button>}</div>
-                  <div className="grid grid-cols-3 gap-2 text-center">
-                    <div className={`${darkMode ? 'bg-red-950/30' : 'bg-red-100'} p-2 rounded-lg`}><p className={`${theme.textMuted2} text-xs`}>Sanctioned</p><p className={`${theme.text} font-bold`}>{formatINR(l.totalAmount)}</p></div>
-                    <div className={`${darkMode ? 'bg-red-950/30' : 'bg-green-100'} p-2 rounded-lg`}><p className={`${theme.textMuted2} text-xs`}>Disbursed</p><p className="font-bold text-green-500">{formatINR(l.disbursedAmount)}</p></div>
-                    <div className={`${darkMode ? 'bg-red-950/30' : 'bg-yellow-100'} p-2 rounded-lg`}><p className={`${theme.textMuted2} text-xs`}>Balance</p><p className="font-bold text-red-500">{formatINR(l.disbursedAmount - l.usedAmount)}</p></div>
-                  </div>
-                </div>
-              ))}
-            </div>
-            <div className={`${theme.card} border p-4 rounded-xl`}>
-              <p className="text-purple-500 font-bold text-lg mb-3">💳 MONTHLY EMI</p>
-              {canEdit && (
-                <div className="flex flex-wrap gap-2 mb-4">
-                  <input type="date" value={newEmi.date} onChange={e => setNewEmi({ ...newEmi, date: e.target.value })} className={`${theme.input} border rounded-lg px-3 py-2`} />
-                  <input value={newEmi.loanName} onChange={e => setNewEmi({ ...newEmi, loanName: e.target.value })} placeholder="Loan Name" className={`${theme.input} border rounded-lg px-3 py-2 flex-1`} />
-                  <input type="number" value={newEmi.amount} onChange={e => setNewEmi({ ...newEmi, amount: e.target.value })} placeholder="EMI ₹" className={`${theme.input} border rounded-lg px-3 py-2 w-28`} />
-                  <button onClick={addEmi} className="bg-purple-600 hover:bg-purple-500 text-white px-4 py-2 rounded-lg font-bold">+ Add</button>
-                </div>
-              )}
-              <div className="space-y-2 max-h-48 overflow-y-auto">
-                {emiPayments.sort((a, b) => b.date?.localeCompare(a.date)).map(e => (
-                  <div key={e.id} className={`flex justify-between ${theme.cardInner} p-3 rounded-lg`}>
-                    <div><span className={`${theme.text} font-bold`}>{e.date}</span> <span className={theme.textMuted}>{e.loanName}</span></div>
-                    <div className="flex items-center gap-3"><span className="text-purple-500 font-bold">{formatINR(e.amount)}</span>{canEdit && <button onClick={() => deleteItem('emiPayments', e.id)} className="text-red-500">✕</button>}</div>
-                  </div>
-                ))}
-              </div>
-              <div className="mt-4 p-3 bg-purple-600/20 rounded-lg text-center">
-                <p className="text-purple-500">Total EMI Paid: <span className="font-black text-2xl">{formatINR(totalEMI)}</span></p>
-              </div>
-            </div>
-          </div>
-        )}
+
 
         {/* SIP */}
         {activeTab === 'sip' && !compareMode && (
