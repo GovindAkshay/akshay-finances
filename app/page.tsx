@@ -444,8 +444,28 @@ export default function FinanceTracker() {
 
         {/* Header */}
         <div className="text-center mb-8">
-          <svg viewBox="0 0 100 40" className="w-24 h-12 mx-auto mb-3" style={{ filter: darkMode ? 'drop-shadow(0 0 25px rgba(220,38,38,0.8))' : 'drop-shadow(0 2px 4px rgba(0,0,0,0.2))' }}>
-            <path d="M50 5 L30 20 L0 15 L15 25 L10 35 L30 28 L50 40 L70 28 L90 35 L85 25 L100 15 L70 20 Z" fill="#dc2626" />
+          {/* Iconic Batman Symbol */}
+          <svg viewBox="0 0 100 32" className="w-36 h-14 mx-auto mb-3" style={{ filter: darkMode ? 'drop-shadow(0 0 20px rgba(220,38,38,0.9)) drop-shadow(0 0 40px rgba(220,38,38,0.5))' : 'drop-shadow(0 3px 6px rgba(0,0,0,0.3))' }}>
+            <path 
+              fill="#dc2626" 
+              d="M50 0 
+                 C50 0 45 8 40 10 
+                 C35 12 25 8 20 12 
+                 C15 16 12 14 8 16 
+                 C4 18 0 16 0 16 
+                 C0 16 8 20 12 22 
+                 C16 24 20 32 25 32 
+                 C30 32 38 24 42 22 
+                 C46 20 50 28 50 28 
+                 C50 28 54 20 58 22 
+                 C62 24 70 32 75 32 
+                 C80 32 84 24 88 22 
+                 C92 20 100 16 100 16 
+                 C100 16 96 18 92 16 
+                 C88 14 85 16 80 12 
+                 C75 8 65 12 60 10 
+                 C55 8 50 0 50 0 Z"
+            />
           </svg>
           <h1
             className="text-4xl md:text-6xl font-black tracking-wider mb-2"
