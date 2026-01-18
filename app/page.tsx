@@ -19,7 +19,7 @@ const auth = getAuth(app);
 const provider = new GoogleAuthProvider();
 
 // Authorized editors
-const EDITORS = ['akshaygovind@gmail.com', 'toshnilgovind@gmail.com'];
+const EDITORS = ['akshaygovind06@gmail.com', 'toshnilgovind@gmail.com'];
 
 export default function FinanceTracker() {
   const [user, setUser] = useState<any>(null);
