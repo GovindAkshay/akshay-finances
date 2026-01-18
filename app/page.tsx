@@ -19,7 +19,6 @@ const db = getFirestore(app);
 const auth = getAuth(app);
 const provider = new GoogleAuthProvider();
 
-// ALLOWED USERS - Only these emails can access
 const ALLOWED_USERS = [
   'akshaygovind06@gmail.com',
   'toshnilgovind@gmail.com',
@@ -84,7 +83,6 @@ export default function FinanceTracker() {
     if (savedTheme !== null) setDarkMode(savedTheme === 'true');
   }, []);
 
-  // Lightning effect
   useEffect(() => {
     if (!darkMode) return;
     const interval = setInterval(() => {
@@ -102,7 +100,6 @@ export default function FinanceTracker() {
     return () => clearInterval(interval);
   }, [darkMode]);
 
-  // Alfred advice generator
   useEffect(() => {
     if (expenseEntries.length > 0) {
       const advice = ALFRED_ADVICE[Math.floor(Math.random() * ALFRED_ADVICE.length)];
@@ -115,7 +112,6 @@ export default function FinanceTracker() {
     localStorage.setItem('darkMode', String(!darkMode));
   };
 
-  // Music functions
   const playMusic = () => {
     if (audioRef.current) {
       audioRef.current.volume = 0.3;
@@ -300,7 +296,6 @@ export default function FinanceTracker() {
     const pdf = new jsPDF();
     const pw = pdf.internal.pageSize.width;
 
-    // Header
     pdf.setFillColor(10, 10, 10);
     pdf.rect(0, 0, pw, 45, 'F');
     pdf.setTextColor(220, 38, 38);
@@ -313,7 +308,6 @@ export default function FinanceTracker() {
     pdf.setFontSize(10);
     pdf.text(`${selectedMonth === 'all' ? 'All Time Report' : getMonthName(selectedMonth)} | Generated: ${new Date().toLocaleDateString()}`, pw / 2, 38, { align: 'center' });
 
-    // Summary
     const summaryData = [
       ['💰 Total Income', formatUSD(totalIncome), formatINR(totalIncome)],
       ['💸 Total Expenses', formatUSD(totalExpenses), formatINR(totalExpenses)],
@@ -331,13 +325,11 @@ export default function FinanceTracker() {
       styles: { fontSize: 11 }
     });
 
-    // Alfred's Advice
     pdf.setFontSize(10);
     pdf.setTextColor(100);
     const adviceY = (pdf as any).lastAutoTable.finalY + 10;
     pdf.text(`🎩 Alfred says: "${alfredAdvice}"`, 14, adviceY);
 
-    // Income Table
     if (filteredIncome.length) {
       pdf.setFontSize(14);
       pdf.setTextColor(34, 197, 94);
@@ -351,7 +343,6 @@ export default function FinanceTracker() {
       });
     }
 
-    // Expense Table
     if (filteredExpenses.length) {
       pdf.setFontSize(14);
       pdf.setTextColor(220, 38, 38);
@@ -365,7 +356,6 @@ export default function FinanceTracker() {
       });
     }
 
-    // Category Breakdown
     if (Object.keys(categoryTotals).length) {
       pdf.setFontSize(14);
       pdf.setTextColor(124, 58, 237);
@@ -381,7 +371,6 @@ export default function FinanceTracker() {
       });
     }
 
-    // Footer
     const pageCount = pdf.getNumberOfPages();
     for (let i = 1; i <= pageCount; i++) {
       pdf.setPage(i);
@@ -394,25 +383,18 @@ export default function FinanceTracker() {
     pdf.save(`dark-wallet-${selectedMonth || 'all'}-${new Date().toISOString().slice(0, 10)}.pdf`);
   };
 
-  // Auto Monthly Report (check on load)
   useEffect(() => {
     if (!isAuthorized) return;
     const lastReport = localStorage.getItem('lastMonthlyReport');
     const currentMonth = new Date().toISOString().slice(0, 7);
     if (lastReport !== currentMonth && new Date().getDate() === 1) {
-      // It's the 1st of a new month - generate report
       localStorage.setItem('lastMonthlyReport', currentMonth);
-      // Auto-send email report
-      setTimeout(() => {
-        sendEmail();
-      }, 3000);
+      setTimeout(() => { sendEmail(); }, 3000);
     }
   }, [isAuthorized]);
 
   const theme = {
-    bg: darkMode
-      ? 'linear-gradient(180deg, #1a0000 0%, #0d0000 50%, #000 100%)'
-      : 'linear-gradient(180deg, #f8f9fa 0%, #e9ecef 50%, #dee2e6 100%)',
+    bg: darkMode ? 'linear-gradient(180deg, #1a0000 0%, #0d0000 50%, #000 100%)' : 'linear-gradient(180deg, #f8f9fa 0%, #e9ecef 50%, #dee2e6 100%)',
     card: darkMode ? 'bg-gradient-to-br from-black/80 to-red-950/20 border-red-900/30' : 'bg-white border-gray-300',
     cardInner: darkMode ? 'bg-black/50' : 'bg-gray-50',
     input: darkMode ? 'bg-black/80 border-red-900/50 text-white' : 'bg-white border-gray-300 text-gray-900',
@@ -421,7 +403,6 @@ export default function FinanceTracker() {
     textMuted2: darkMode ? 'text-gray-500' : 'text-gray-500',
   };
 
-  // Pie Chart Component
   const PieChart = ({ data }: { data: any }) => {
     const total = Object.values(data).reduce((s: number, v: any) => s + v, 0);
     if (total === 0) return <p className={`${theme.textMuted} text-center py-8`}>No expense data yet</p>;
@@ -459,7 +440,6 @@ export default function FinanceTracker() {
     );
   };
 
-  // ==================== LOGIN SCREEN ====================
   if (authChecking) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
@@ -471,7 +451,6 @@ export default function FinanceTracker() {
   if (!user || !isAuthorized) {
     return (
       <div className="min-h-screen bg-black relative overflow-hidden flex items-center justify-center">
-        {/* Animated Rain */}
         <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
           {[...Array(100)].map((_, i) => (
             <div key={i} className="absolute w-px bg-gradient-to-b from-transparent via-red-500/20 to-transparent"
@@ -480,24 +459,26 @@ export default function FinanceTracker() {
           ))}
         </div>
 
-        {/* Lightning */}
         {showLightning && <div className="fixed inset-0 bg-white/20 z-40 pointer-events-none" />}
 
-        {/* Red Glow */}
         <div className="fixed top-0 right-0 w-96 h-96 bg-red-600/20 rounded-full blur-3xl pointer-events-none"></div>
         <div className="fixed bottom-0 left-0 w-72 h-72 bg-red-900/30 rounded-full blur-3xl pointer-events-none"></div>
 
         <style>{`
           @keyframes rain { 0% { transform: translateY(-100vh); } 100% { transform: translateY(100vh); } }
           @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
-          @keyframes glow { 0%, 100% { filter: drop-shadow(0 0 20px rgba(220,38,38,0.8)); } 50% { filter: drop-shadow(0 0 40px rgba(220,38,38,1)); } }
         `}</style>
 
         <div className="relative z-10 text-center p-8">
-          {/* Batman Symbol */}
-          <svg viewBox="0 0 100 32" className="w-48 h-20 mx-auto mb-6" style={{ animation: 'glow 2s ease-in-out infinite, float 3s ease-in-out infinite' }}>
-            <path fill="#dc2626" d="M50 0 C50 0 45 8 40 10 C35 12 25 8 20 12 C15 16 12 14 8 16 C4 18 0 16 0 16 C0 16 8 20 12 22 C16 24 20 32 25 32 C30 32 38 24 42 22 C46 20 50 28 50 28 C50 28 54 20 58 22 C62 24 70 32 75 32 C80 32 84 24 88 22 C92 20 100 16 100 16 C100 16 96 18 92 16 C88 14 85 16 80 12 C75 8 65 12 60 10 C55 8 50 0 50 0 Z" />
-          </svg>
+          <img 
+            src="/batman_logo.png" 
+            alt="Batman" 
+            className="w-48 h-28 mx-auto mb-6 object-contain"
+            style={{ 
+              filter: 'drop-shadow(0 0 30px rgba(220,38,38,0.9)) drop-shadow(0 0 60px rgba(220,38,38,0.5))',
+              animation: 'float 3s ease-in-out infinite'
+            }}
+          />
 
           <h1 className="text-5xl md:text-7xl font-black tracking-wider mb-4" style={{ color: '#dc2626', textShadow: '0 0 50px rgba(220,38,38,0.8)' }}>
             THE DARK WALLET
@@ -529,7 +510,6 @@ export default function FinanceTracker() {
     );
   }
 
-  // ==================== MAIN APP ====================
   if (loading) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
@@ -543,12 +523,10 @@ export default function FinanceTracker() {
 
   return (
     <div className={`min-h-screen ${theme.text} relative overflow-hidden`} style={{ background: theme.bg }}>
-      {/* Audio Element for Batman Theme */}
       <audio ref={audioRef} loop>
         <source src="/YTDown.com_YouTube_The-Batman-Official-Soundtrack-It-s-Rain_Media_IhHvaR1hFYs_001_1080p.mp3" type="audio/mpeg" />
       </audio>
 
-      {/* Music Prompt Modal */}
       {showMusicPrompt && (
         <div className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4">
           <div className="bg-gradient-to-br from-gray-900 to-black border border-red-900/50 rounded-2xl p-8 max-w-md text-center">
@@ -567,10 +545,8 @@ export default function FinanceTracker() {
         </div>
       )}
 
-      {/* Lightning Flash */}
       {showLightning && <div className="fixed inset-0 bg-white/30 z-40 pointer-events-none" />}
 
-      {/* Animated Rain */}
       {darkMode && (
         <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
           {[...Array(100)].map((_, i) => (
@@ -584,9 +560,9 @@ export default function FinanceTracker() {
       <style>{`
         @keyframes rain { 0% { transform: translateY(-100vh); } 100% { transform: translateY(100vh); } }
         @keyframes flyBat { 0% { transform: translateX(-50px) translateY(0); opacity: 1; } 100% { transform: translateX(100vw) translateY(-50px); opacity: 0; } }
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
       `}</style>
 
-      {/* Flying Bats */}
       {showBats && (
         <div className="fixed inset-0 pointer-events-none z-50">
           {[...Array(15)].map((_, i) => (
@@ -596,7 +572,6 @@ export default function FinanceTracker() {
         </div>
       )}
 
-      {/* Red Glow */}
       {darkMode && (
         <>
           <div className="fixed top-0 right-0 w-96 h-96 bg-red-600/10 rounded-full blur-3xl pointer-events-none"></div>
@@ -605,7 +580,6 @@ export default function FinanceTracker() {
       )}
 
       <div className="max-w-6xl mx-auto relative z-10 p-4 md:p-6">
-        {/* Top Bar */}
         <div className="flex flex-wrap justify-between items-center mb-6 gap-3">
           <div className="flex items-center gap-3">
             <span className={`${darkMode ? 'bg-red-900/60 text-red-300 border border-red-800/50' : 'bg-red-100 text-red-700 border border-red-200'} px-4 py-2 rounded-full font-medium text-sm`}>
@@ -626,18 +600,19 @@ export default function FinanceTracker() {
           </div>
         </div>
 
-        {/* Header */}
         <div className="text-center mb-8">
-          <svg viewBox="0 0 100 32" className="w-36 h-14 mx-auto mb-3" style={{ filter: darkMode ? 'drop-shadow(0 0 20px rgba(220,38,38,0.9))' : 'drop-shadow(0 3px 6px rgba(0,0,0,0.3))' }}>
-            <path fill="#dc2626" d="M50 0 C50 0 45 8 40 10 C35 12 25 8 20 12 C15 16 12 14 8 16 C4 18 0 16 0 16 C0 16 8 20 12 22 C16 24 20 32 25 32 C30 32 38 24 42 22 C46 20 50 28 50 28 C50 28 54 20 58 22 C62 24 70 32 75 32 C80 32 84 24 88 22 C92 20 100 16 100 16 C100 16 96 18 92 16 C88 14 85 16 80 12 C75 8 65 12 60 10 C55 8 50 0 50 0 Z" />
-          </svg>
+          <img 
+            src="/batman_logo.png" 
+            alt="Batman" 
+            className="w-32 h-20 mx-auto mb-3 object-contain"
+            style={{ filter: darkMode ? 'drop-shadow(0 0 20px rgba(220,38,38,0.9))' : 'drop-shadow(0 3px 6px rgba(0,0,0,0.3))' }}
+          />
           <h1 className="text-4xl md:text-6xl font-black tracking-wider mb-2" style={{ color: '#dc2626', textShadow: darkMode ? '0 0 40px rgba(220,38,38,0.6)' : 'none' }}>
             THE DARK WALLET
           </h1>
           <p className={`${theme.textMuted} tracking-[0.3em] text-sm font-medium`}>VENGEANCE • SHADOWS • SAVINGS</p>
         </div>
 
-        {/* Controls */}
         <div className="flex flex-wrap justify-center gap-3 mb-6">
           <select value={selectedMonth} onChange={e => setSelectedMonth(e.target.value)} className={`${theme.input} border rounded-xl px-5 py-3 font-medium text-sm min-w-[180px]`}>
             <option value="all">🦇 ALL TIME</option>
@@ -654,7 +629,6 @@ export default function FinanceTracker() {
           </button>
         </div>
 
-        {/* Navigation */}
         <div className="flex flex-wrap justify-center gap-2 mb-6">
           {[
             { id: 'batcave', icon: '🦇', name: 'BATCAVE' },
@@ -673,7 +647,6 @@ export default function FinanceTracker() {
           ))}
         </div>
 
-        {/* Alfred's Advice */}
         {activeTab === 'batcave' && alfredAdvice && (
           <div className={`${theme.card} border rounded-2xl p-4 mb-6 flex items-start gap-4`}>
             <div className="text-4xl">🎩</div>
@@ -684,7 +657,6 @@ export default function FinanceTracker() {
           </div>
         )}
 
-        {/* BATCAVE */}
         {activeTab === 'batcave' && (
           <div className="space-y-6">
             <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
@@ -709,7 +681,6 @@ export default function FinanceTracker() {
           </div>
         )}
 
-        {/* INTEL */}
         {activeTab === 'intel' && (
           <div className={`${theme.card} border rounded-2xl p-6`}>
             <p className="text-red-500 font-bold text-xl mb-6">📊 EXPENSE BREAKDOWN</p>
@@ -717,7 +688,6 @@ export default function FinanceTracker() {
           </div>
         )}
 
-        {/* INCOME */}
         {activeTab === 'income' && (
           <div className={`${theme.card} border rounded-2xl p-6`}>
             <p className="text-green-500 font-bold text-xl mb-4">💰 CASH IN</p>
@@ -768,7 +738,6 @@ export default function FinanceTracker() {
           </div>
         )}
 
-        {/* EXPENSES */}
         {activeTab === 'expenses' && (
           <div className={`${theme.card} border rounded-2xl p-6`}>
             <p className="text-red-500 font-bold text-xl mb-4">💸 CASH OUT</p>
@@ -823,7 +792,6 @@ export default function FinanceTracker() {
           </div>
         )}
 
-        {/* EMI */}
         {activeTab === 'emi' && (
           <div className={`${theme.card} border rounded-2xl p-6`}>
             <p className="text-purple-500 font-bold text-xl mb-4">🏦 EMI PAYMENTS</p>
@@ -857,7 +825,6 @@ export default function FinanceTracker() {
           </div>
         )}
 
-        {/* SIP */}
         {activeTab === 'sip' && (
           <div className={`${theme.card} border rounded-2xl p-6`}>
             <p className="text-blue-500 font-bold text-xl mb-4">📈 SIP INVESTMENTS</p>
@@ -891,7 +858,6 @@ export default function FinanceTracker() {
           </div>
         )}
 
-        {/* Footer */}
         <p className={`text-center ${theme.textMuted2} text-xs mt-10 tracking-[0.2em]`}>
           I AM VENGEANCE • I AM THE NIGHT • I AM FINANCIALLY RESPONSIBLE
         </p>
